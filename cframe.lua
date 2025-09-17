@@ -4,13 +4,23 @@ return function(library)
     local UserInputService = game:GetService("UserInputService")
     local LocalPlayer = Players.LocalPlayer
 
-    -- Wait until character exists
-    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    local hrp = character:WaitForChild("HumanoidRootPart")
-
-    -- Track key states
     local moving = {W=false, A=false, S=false, D=false}
+    local hrp = nil
 
+    -- Wait for character
+    local function getHRP()
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        hrp = character:WaitForChild("HumanoidRootPart")
+    end
+
+    getHRP()
+
+    -- Update hrp on respawn
+    LocalPlayer.CharacterAdded:Connect(function(char)
+        hrp = char:WaitForChild("HumanoidRootPart")
+    end)
+
+    -- WASD movement tracking
     UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if gameProcessed then return end
         if input.KeyCode == Enum.KeyCode.W then moving.W = true end
@@ -24,14 +34,6 @@ return function(library)
         if input.KeyCode == Enum.KeyCode.A then moving.A = false end
         if input.KeyCode == Enum.KeyCode.S then moving.S = false end
         if input.KeyCode == Enum.KeyCode.D then moving.D = false end
-    end)
-
-    -- Handle toggle key from UI
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if gameProcessed then return end
-        if input.KeyCode.Name == library.flags.cframe_key then
-            library.flags.cframe_enabled = not library.flags.cframe_enabled
-        end
     end)
 
     -- Movement loop
