@@ -2,16 +2,15 @@ return function(library)
     local RunService = game:GetService("RunService")
     local Players = game:GetService("Players")
     local UserInputService = game:GetService("UserInputService")
-
     local LocalPlayer = Players.LocalPlayer
-    local moving = {
-        W = false,
-        A = false,
-        S = false,
-        D = false
-    }
 
-    -- Key input handling
+    -- Wait until character exists
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local hrp = character:WaitForChild("HumanoidRootPart")
+
+    -- Track key states
+    local moving = {W=false, A=false, S=false, D=false}
+
     UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if gameProcessed then return end
         if input.KeyCode == Enum.KeyCode.W then moving.W = true end
@@ -27,24 +26,27 @@ return function(library)
         if input.KeyCode == Enum.KeyCode.D then moving.D = false end
     end)
 
+    -- Handle toggle key from UI
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if input.KeyCode.Name == library.flags.cframe_key then
+            library.flags.cframe_enabled = not library.flags.cframe_enabled
+        end
+    end)
+
     -- Movement loop
     RunService.Heartbeat:Connect(function()
-        if library.flags.cframe_enabled then
-            local character = LocalPlayer.Character
-            if character and character:FindFirstChild("HumanoidRootPart") then
-                local hrp = character.HumanoidRootPart
-                local power = (library.flags.cframe_value or 10) / 10
+        if library.flags.cframe_enabled and hrp then
+            local power = (library.flags.cframe_value or 10) / 10
+            local dir = Vector3.zero
 
-                -- Build movement vector from WASD
-                local direction = Vector3.zero
-                if moving.W then direction = direction + hrp.CFrame.LookVector end
-                if moving.S then direction = direction - hrp.CFrame.LookVector end
-                if moving.A then direction = direction - hrp.CFrame.RightVector end
-                if moving.D then direction = direction + hrp.CFrame.RightVector end
+            if moving.W then dir = dir + hrp.CFrame.LookVector end
+            if moving.S then dir = dir - hrp.CFrame.LookVector end
+            if moving.A then dir = dir - hrp.CFrame.RightVector end
+            if moving.D then dir = dir + hrp.CFrame.RightVector end
 
-                if direction.Magnitude > 0 then
-                    hrp.CFrame = hrp.CFrame + (direction.Unit * power)
-                end
+            if dir.Magnitude > 0 then
+                hrp.CFrame = hrp.CFrame + dir.Unit * power
             end
         end
     end)
