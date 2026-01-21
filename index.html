@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Francium Monaco</title>
+    <style type="text/css">
+        @font-face {
+            font-family: 'JetBrains Mono';
+            src: url('JetBrainsMono-Regular.woff2') format('woff2'),
+                 url('JetBrainsMono-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        :root {
+            --bg-color: #1a1a1a;
+            --text-color: #C3CCDB;
+            --accent-color: #7AA2F7;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            background: var(--bg-color) !important;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+            color: var(--text-color);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        #container {
+            width: 100%;
+            height: 100vh;
+            background: var(--bg-color);
+        }
+
+        .monaco-editor {
+            background: var(--bg-color);
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 9999;
+        }
+
+        .toast {
+            padding: 14px 24px 14px 44px;
+            margin: 10px 0;
+            border-radius: 8px;
+            color: white;
+            font-family: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+            font-size: 13px;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateX(50px);
+            filter: blur(8px);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .toast::before {
+            content: "";
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .toast.success::before {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z'/%3E%3C/svg%3E");
+        }
+
+        .toast.error::before {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z'/%3E%3C/svg%3E");
+        }
+
+        .toast.success {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.95) 0%, rgba(22, 163, 74, 0.95) 100%);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            box-shadow: 0 8px 24px rgba(34, 197, 94, 0.3);
+        }
+
+        .toast.error {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.95) 0%, rgba(220, 38, 38, 0.95) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+            filter: blur(0);
+        }
+
+        .toast.hide {
+            opacity: 0;
+            transform: translateX(50px);
+            filter: blur(8px);
+        }
+    </style>
+</head>
+<body>
+    <div class="toast-container"></div>
+    <div id="container"></div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs/loader.min.js"></script>
+    <script>
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs' } });
+
+        let editor;
+
+        function updateMonacoTheme() {
+            if (typeof monaco === 'undefined' || !monaco.editor) return;
+            monaco.editor.defineTheme('PDark', {
+                base: 'vs-dark',
+                inherit: true,
+                rules: [
+                    { token: '', foreground: 'C3CCDB' },
+                    { token: 'keyword', foreground: '7AA2F7' },
+                    { token: 'comment', foreground: '555555', fontStyle: 'italic' },
+                    { token: 'string', foreground: '9ECE6A' },
+                    { token: 'number', foreground: 'FF9E64' }
+                ],
+                colors: {
+                    'editor.background': '#1a1a1a',
+                    'editor.foreground': '#C3CCDB',
+                    'editorLineNumber.foreground': '#6A6A6A',
+                    'editorCursor.foreground': '#7AA2F7',
+                    'editor.lineHighlightBackground': '#1f1f1f',
+                    'editorLineNumber.activeForeground': '#BBBBBB'
+                }
+            });
+            if (editor) monaco.editor.setTheme('PDark');
+        }
+
+        function showToast(msg, type) {
+            const container = document.querySelector('.toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = msg;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.add('hide');
+                setTimeout(() => container.removeChild(toast), 400);
+            }, 3000);
+        }
+
+        require(['vs/editor/editor.main'], function () {
+            updateMonacoTheme();
+            
+            require(['vs/basic-languages/lua/lua'], function () {
+                monaco.languages.registerCompletionItemProvider('lua', {
+                    provideCompletionItems: function (model, position) {
+                        const word = model.getWordUntilPosition(position);
+                        const prefix = word.word.toLowerCase();
+                        const suggestions = [
+                            { label: 'print', kind: monaco.languages.CompletionItemKind.Function, insertText: 'print(${1})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Outputs a message to the console' },
+                            { label: 'printidentity', kind: monaco.languages.CompletionItemKind.Function, insertText: 'printidentity(${1})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Prints identity information' },
+                            { label: 'executor', kind: monaco.languages.CompletionItemKind.Function, insertText: 'executor(${1})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Executes a command or script' },
+                            { label: 'local', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'local ${1}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Declares a local variable' },
+                            { label: 'function', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'function ${1}()\n\t${2}\nend', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Defines a function' },
+                            { label: 'if', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'if ${1} then\n\t${2}\nend', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Conditional statement' },
+                            { label: 'else', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'else\n\t${1}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Alternative condition' },
+                            { label: 'elseif', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'elseif ${1} then\n\t${2}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Additional condition' },
+                            { label: 'for', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'for ${1} = ${2}, ${3} do\n\t${4}\nend', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Loop over a range' },
+                            { label: 'while', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'while ${1} do\n\t${2}\nend', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Loop while condition is true' },
+                            { label: 'return', kind: monaco.languages.CompletionItemKind.Keyword, insertText: 'return ${1}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Returns a value' },
+                            { label: 'assert', kind: monaco.languages.CompletionItemKind.Function, insertText: 'assert(${1})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Asserts a condition' },
+                            { label: 'getmetatable', kind: monaco.languages.CompletionItemKind.Function, insertText: 'getmetatable(${1})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Gets the metatable of an object' },
+                            { label: 'pairs', kind: monaco.languages.CompletionItemKind.Function, insertText: 'pairs(${1})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Iterates over table key-value pairs' },
+                            { label: 'ipairs', kind: monaco.languages.CompletionItemKind.Function, insertText: 'ipairs(${1})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Iterates over table indices' },
+                            { label: 'tonumber', kind: monaco.languages.CompletionItemKind.Function, insertText: 'tonumber(${1})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Converts to a number' },
+                            { label: 'tostring', kind: monaco.languages.CompletionItemKind.Function, insertText: 'tostring(${1})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Converts to a string' },
+                            { label: 'type', kind: monaco.languages.CompletionItemKind.Function, insertText: 'type(${1})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Returns the type of a value' },
+                            { label: 'hookfunction', kind: monaco.languages.CompletionItemKind.Function, insertText: 'hookfunction(${1}, ${2})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Hooks a function' },
+                            { label: 'getgenv', kind: monaco.languages.CompletionItemKind.Function, insertText: 'getgenv()', documentation: 'Gets global environment' },
+                            { label: 'getrenv', kind: monaco.languages.CompletionItemKind.Function, insertText: 'getrenv()', documentation: 'Gets Roblox environment' },
+                            { label: 'isexecutorclosure', kind: monaco.languages.CompletionItemKind.Function, insertText: 'isexecutorclosure(${1})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Checks if a function is an executor closure' },
+                            { label: 'setclipboard', kind: monaco.languages.CompletionItemKind.Function, insertText: 'setclipboard(${1})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, documentation: 'Sets clipboard content' }
+                        ].filter(s => s.label.toLowerCase().startsWith(prefix));
+                        return { suggestions };
+                    },
+                    triggerCharacters: ['.', ':', '"', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+                });
+
+                editor = monaco.editor.create(document.getElementById('container'), {
+                    value: 'print("Hello, World!")',
+                    language: 'lua',
+                    theme: 'PDark',
+                    fontSize: 16,
+                    fontFamily: "'JetBrains Mono', Consolas, monospace",
+                    minimap: { enabled: false },
+                    smoothScrolling: true,
+                    cursorBlinking: 'smooth',
+                    cursorSmoothCaretAnimation: 'on',
+                    folding: true,
+                    dragAndDrop: true,
+                    links: true,
+                    showFoldingControls: 'always',
+                    foldingHighlight: false,
+                    fontLigatures: true,
+                    formatOnPaste: true,
+                    showDeprecated: true,
+                    suggest: { 
+                        snippetsPreventQuickSuggestions: false,
+                        showMethods: true,
+                        showFunctions: true,
+                        showKeywords: true
+                    },
+                    quickSuggestions: {
+                        other: true,
+                        comments: false,
+                        strings: true
+                    },
+                    padding: { top: 8, left: 0 },
+                    lineNumbers: 'on',
+                    lineNumbersMinChars: 3,
+                    scrollBeyondLastLine: false,
+                    stopRenderingLineAfter: 6500,
+                    renderLineHighlight: 'all',
+                    renderLineHighlightOnlyWhenFocus: false
+                });
+                
+                editor.getModel().updateOptions({ insertSpaces: false });
+                
+                window.onresize = () => editor.layout();
+                window.GetText = () => editor.getValue();
+                window.SetText = x => editor.setValue(String(x));
+            });
+        });
+    </script>
+</body>
+</html>
