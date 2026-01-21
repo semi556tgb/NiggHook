@@ -16,6 +16,14 @@
             --bg-color: #171717;
             --text-color: #C3CCDB;
             --accent-color: #7AA2F7;
+            --hover-color: #252525;
+            --border-color: #2a2a2a;
+            --secondary-bg: #0f0f0f;
+            --secondary-text: #6A6A6A;
+            --pressed-color: #7AA2F7;
+            --line-number: #6A6A6A;
+            --line-number-active: #BBBBBB;
+            --url: url("");
         }
 
         * {
@@ -31,18 +39,271 @@
             overflow: hidden;
             font-family: 'JetBrains Mono', Consolas, 'Courier New', monospace;
             color: var(--text-color);
+            display: flex;
+            flex-direction: column;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
 
+        #main-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            background: var(--bg-color);
+            border-radius: 0 5px 0 0;
+            overflow: hidden;
+        }
+
+        #tab-bar {
+            background: transparent !important;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            gap: 4px;
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+            overflow-y: hidden;
+            white-space: nowrap;
+        }
+
+        #tab-bar::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        #tab-bar::-webkit-scrollbar-track {
+            background: var(--secondary-bg);
+            border-radius: 3px;
+        }
+
+        #tab-bar::-webkit-scrollbar-thumb {
+            background: #3a3a3a;
+            border-radius: 3px;
+            min-width: 24px;
+        }
+
+        .tab {
+            height: 34px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px 0 14px;
+            color: #6A6A6A;
+            cursor: pointer;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 7px;
+            margin-right: 3px;
+            min-width: 120px;
+            max-width: 200px;
+            user-select: none;
+            font-size: 13px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            justify-content: space-between;
+            transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+            font-family: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+            font-weight: 500;
+        }
+
+        .tab:first-child {
+            margin-left: 6px;
+        }
+
+        .tab.active {
+            background: linear-gradient(180deg, #1F1F1F 0%, #1F1F1F 100%);
+            color: #E0E0E0;
+            border-color: #3a3a3a;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .tab:hover:not(.active) {
+            background: linear-gradient(180deg, #252525 0%, #1f1f1f 100%);
+            color: #B0B0B0;
+            border-color: #2a2a2a;
+        }
+
+        .tab-icon {
+            width: 15px;
+            height: 15px;
+            margin-right: 8px;
+            flex-shrink: 0;
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+        }
+
+        .tab:hover .tab-icon,
+        .tab.active .tab-icon {
+            opacity: 1;
+        }
+
+        .tab-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .tab-close {
+            opacity: 0;
+            margin-left: 10px;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            color: #6A6A6A;
+            font-size: 18px;
+            position: relative;
+            flex-shrink: 0;
+            font-weight: 300;
+        }
+
+        .tab:hover .tab-close,
+        .tab.active .tab-close {
+            opacity: 0.5;
+        }
+
+        .tab-close:hover {
+            opacity: 1 !important;
+            background: rgba(255, 255, 255, 0.1);
+            color: #E0E0E0;
+        }
+
+        .tab-close::before {
+            content: "×";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            line-height: 0;
+        }
+
+        #new-tab-btn {
+            background: transparent;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6A6A6A;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 22px;
+            border-radius: 7px;
+            border: 1px solid transparent;
+            font-family: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+            font-weight: 300;
+            margin-left: 2px;
+        }
+
+        #new-tab-btn:hover {
+            background: linear-gradient(180deg, #252525 0%, #1f1f1f 100%);
+            color: #B0B0B0;
+            border-color: #2a2a2a;
+        }
+
+        #new-tab-btn:active {
+            transform: scale(0.95);
+        }
+
+        .context-menu {
+            background: linear-gradient(135deg, #1a1a1a 0%, #151515 100%);
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 6px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            min-width: 160px;
+            animation: fadeIn 0.15s ease-out forwards;
+        }
+
+        .menu-item {
+            padding: 11px 16px;
+            color: #C3CCDB;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+            transition: all 0.15s ease;
+            font-weight: 500;
+        }
+
+        .menu-item:hover {
+            background: linear-gradient(135deg, #252525 0%, #1f1f1f 100%);
+            color: #E0E0E0;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-5px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+        }
+
+        @keyframes tabEnter {
+            0% {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .tab-fade-out {
+            animation: fadeOut 0.15s ease-out forwards;
+            pointer-events: none;
+        }
+
+        .tab-enter-animate {
+            animation: tabEnter 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
         #container {
             width: 100%;
-            height: 100vh;
-            background: var(--bg-color);
+            height: calc(100vh - 42px);
+            background: transparent !important;
         }
 
         .monaco-editor {
             background: var(--bg-color);
+        }
+
+        .margin:first-child {
+            background-image: var(--url);
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        .lines-content:nth-of-type(1),
+        .monaco-editor-background:nth-of-type(1) {
+            background-image: var(--url);
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
         }
 
         .toast-container {
@@ -113,17 +374,31 @@
             transform: translateX(50px);
             filter: blur(8px);
         }
+
+        .tab-transition-out {
+            opacity: 0.7;
+            transition: opacity 0.1s ease;
+        }
+
+        .tab-transition-in {
+            opacity: 1;
+            transition: opacity 0.15s ease;
+        }
     </style>
 </head>
 <body>
-    <div class="toast-container"></div>
-    <div id="container"></div>
-    
+    <div id="main-container">
+        <div class="toast-container"></div>
+        <div id="tab-bar">
+            <div id="new-tab-btn">+</div>
+        </div>
+        <div id="container"></div>
+    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs/loader.min.js"></script>
     <script>
         require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs' } });
 
-        let editor;
+        let editor, activeTab = null, tabs = [], tabCount = 0, scriptCounter = 1, saveTimeout = null;
 
         function updateMonacoTheme() {
             if (typeof monaco === 'undefined' || !monaco.editor) return;
@@ -160,6 +435,139 @@
                 toast.classList.add('hide');
                 setTimeout(() => container.removeChild(toast), 400);
             }, 3000);
+        }
+
+        class Tab {
+            constructor(content = 'print("Hello, World!")', name = null, id = `tab-${Date.now()}`) {
+                this.id = id;
+                this.name = name || `Script ${scriptCounter++}`;
+                this.content = content;
+                tabCount++;
+                this.element = this.createTabElement();
+            }
+
+            createTabElement() {
+                const el = document.createElement('div');
+                el.className = 'tab tab-enter-animate';
+                el.innerHTML = `<span class="tab-name"><svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="14 2 14 8 20 8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="tab-text">${this.name}</span></span><span class="tab-close"></span>`;
+                setTimeout(() => el.classList.remove('tab-enter-animate'), 250);
+
+                el.addEventListener('click', e => !e.target.classList.contains('tab-close') && activateTab(this));
+                el.querySelector('.tab-close').addEventListener('click', e => {
+                    e.stopPropagation();
+                    if (tabs.length > 1) closeTab(this);
+                });
+                el.addEventListener('contextmenu', e => {
+                    e.preventDefault();
+                    document.querySelectorAll('.context-menu').forEach(m => m.remove());
+                    const menu = document.createElement('div');
+                    menu.className = 'context-menu';
+                    menu.innerHTML = '<div class="menu-item">Rename</div><div class="menu-item">Close</div>';
+                    menu.style.cssText = `position:fixed;left:${e.clientX}px;top:${e.clientY}px`;
+                    document.body.appendChild(menu);
+                    menu.children[0].onclick = () => { this.rename(el); menu.remove(); };
+                    menu.children[1].onclick = () => { if (tabs.length > 1) closeTab(this); menu.remove(); };
+                    document.addEventListener('click', () => menu.remove(), { once: true });
+                });
+                el.querySelector('.tab-name').addEventListener('dblclick', () => this.rename(el));
+                return el;
+            }
+
+            rename(el) {
+                const txt = el.querySelector('.tab-text');
+                if (!txt || txt.tagName === 'INPUT') return;
+                const inp = document.createElement('input');
+                inp.value = this.name;
+                inp.style.cssText = 'width:100px;background:transparent;border:none;color:#E0E0E0;outline:none;font:inherit;';
+                txt.replaceWith(inp);
+                inp.focus();
+                inp.select();
+                const done = () => {
+                    this.name = inp.value || 'Untitled';
+                    const newTxt = document.createElement('span');
+                    newTxt.className = 'tab-text';
+                    newTxt.textContent = this.name;
+                    inp.replaceWith(newTxt);
+                    saveTabsToLocalStorage();
+                };
+                inp.onblur = done;
+                inp.onkeydown = e => (e.key === 'Enter' || e.key === 'Escape') && done();
+            }
+        }
+
+        function createNewTab() {
+            const tab = new Tab();
+            tabs.push(tab);
+            const bar = document.getElementById('tab-bar');
+            bar.insertBefore(tab.element, document.getElementById('new-tab-btn'));
+            activateTab(tab);
+            saveTabsToLocalStorage();
+            bar.scrollLeft = bar.scrollWidth;
+        }
+
+        function closeTab(tab) {
+            if (tabs.length <= 1) return showToast('Cannot close last tab', 'error');
+            tab.element.classList.add('tab-fade-out');
+            setTimeout(() => {
+                const idx = tabs.indexOf(tab);
+                if (idx > -1) {
+                    tabs.splice(idx, 1);
+                    tab.element.remove();
+                    if (tab === activeTab) {
+                        activeTab = null;
+                        tabs.length && activateTab(tabs[Math.max(0, idx - 1)]);
+                    }
+                    saveTabsToLocalStorage();
+                }
+            }, 150);
+        }
+
+        function activateTab(tab) {
+            if (activeTab === tab) return;
+            const cont = document.getElementById('container');
+            if (activeTab) {
+                activeTab.element.classList.remove('active');
+                activeTab.content = editor.getValue();
+                cont.classList.add('tab-transition-out');
+            }
+            setTimeout(() => {
+                cont.classList.remove('tab-transition-out');
+                activeTab = tab;
+                tab.element.classList.add('active');
+                editor.setValue(tab.content);
+            }, 100);
+        }
+
+        function saveTabsToLocalStorage() {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                localStorage.setItem('editorTabs', JSON.stringify(tabs.map(t => ({ id: t.id, name: t.name, content: t.content }))));
+                localStorage.setItem('scriptCounter', scriptCounter);
+            }, 200);
+        }
+
+        function loadTabsFromLocalStorage() {
+            try {
+                const saved = localStorage.getItem('editorTabs');
+                const counter = localStorage.getItem('scriptCounter');
+                if (counter) scriptCounter = parseInt(counter) || 1;
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    if (Array.isArray(data) && data.length) {
+                        data.forEach(t => {
+                            if (t.id && t.name && t.content) {
+                                const tab = new Tab(t.content, t.name, t.id);
+                                tabs.push(tab);
+                                document.getElementById('tab-bar').insertBefore(tab.element, document.getElementById('new-tab-btn'));
+                            }
+                        });
+                        if (tabs.length) return activateTab(tabs[0]);
+                    }
+                }
+                createNewTab();
+            } catch (e) {
+                createNewTab();
+            }
         }
 
         require(['vs/editor/editor.main'], function () {
@@ -201,7 +609,7 @@
                 });
 
                 editor = monaco.editor.create(document.getElementById('container'), {
-                    value: 'print("Hello, World!")',
+                    value: '',
                     language: 'lua',
                     theme: 'PDark',
                     fontSize: 16,
@@ -239,10 +647,23 @@
                 });
                 
                 editor.getModel().updateOptions({ insertSpaces: false });
-                
+                editor.onDidChangeModelContent(() => {
+                    if (activeTab) {
+                        activeTab.content = editor.getValue();
+                        saveTabsToLocalStorage();
+                    }
+                });
+                document.getElementById('new-tab-btn').onclick = createNewTab;
+                loadTabsFromLocalStorage();
                 window.onresize = () => editor.layout();
                 window.GetText = () => editor.getValue();
-                window.SetText = x => editor.setValue(String(x));
+                window.SetText = x => {
+                    editor.setValue(String(x));
+                    if (activeTab) {
+                        activeTab.content = editor.getValue();
+                        saveTabsToLocalStorage();
+                    }
+                };
             });
         });
     </script>
